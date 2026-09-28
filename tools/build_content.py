@@ -1,4 +1,6 @@
-"""Build app/content/book.json from the parsed PDF JSON, adding Chinese titles.
+"""Build app/content/book.json from the parsed PDF JSON, embedding the Chinese translations.
+
+Question ids (<section-id>-<n>) are the keys for saved progress and notes: never rename them.
 
 Usage: python3 tools/build_content.py <parsed.json>
 """
@@ -6,7 +8,7 @@ import json, sys, os
 
 ZH = {
     "fit": "Fit / 行为面试", "deal": "交易经历", "tech": "通用技术题", "industry": "行业 / 组别技术题",
-    "fit-intro": "Fit 面试准备总览", "tech-intro": "技术题说明", "industry-intro": "行业题说明", "deal-intro": "讲述交易经历",
+    "preface": "前言", "preface-intro": "为什么出新版？有什么不同？", "should-you-use-the-paid-version-s-of-this-guide": "要不要用付费版？", "fit-intro": "Fit 面试准备总览", "tech-intro": "技术题说明", "industry-intro": "行业题说明", "deal-intro": "讲述交易经历",
     "the-big-5-fit-questions": "五大核心 Fit 问题", "teamwork-leadership": "团队合作 / 领导力",
     "strengths-and-weaknesses": "优点与缺点", "flaws-and-failures": "缺陷与失败",
     "recruiting-process": "招聘流程", "resume-cv": "简历 / CV", "understanding-banking": "理解投行",
@@ -33,18 +35,24 @@ ZH = {
 src = json.load(open(sys.argv[1]))
 root = os.path.join(os.path.dirname(__file__), "..", "app", "content")
 zh_dir = os.path.join(root, "zh")
-translated = {f[:-5] for f in os.listdir(zh_dir) if f.endswith(".json")}
+translated = {f[:-5] for f in os.listdir(zh_dir) if f.endswith(".json") and not f.startswith("_")}
+captions = json.load(open(os.path.join(zh_dir, "_figs.json")))
 for p in src["parts"]:
     p["titleZh"] = ZH[p["id"]]
     for s in p["sections"]:
         s["titleZh"] = ZH[s["id"]]
         s["zh"] = s["id"] in translated
         s.pop("intro", None)
+        for f in s.get("introFigs", []) + [f for q in s["questions"] for f in q.get("figs", [])]:
+            f["captionZh"] = captions[f["src"]]
         if s["zh"]:
             z = json.load(open(os.path.join(zh_dir, s["id"] + ".json")))
             assert len(z["intro"]) == len(s["introBlocks"]), (s["id"], "intro")
+            s["summaryZh"] = z.get("summaryZh", "")
+            s["introZh"] = z["intro"]
             for q in s["questions"]:
                 zq = z["questions"][q["id"]]
                 assert len(zq["a"]) == len(q["a"]), (q["id"], len(zq["a"]), len(q["a"]))
+                q["zh"] = zq
 json.dump(src, open(os.path.join(root, "book.json"), "w"), ensure_ascii=False, separators=(",", ":"))
 print("ok", sum(len(s["questions"]) for p in src["parts"] for s in p["sections"]), "questions; translated:", sorted(translated))
