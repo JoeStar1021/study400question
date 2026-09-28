@@ -1,0 +1,1079 @@
+<title>IB 400 学习台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --bg:#F2F4F1; --panel:#FFFFFF; --sunk:#E8ECE8; --ink:#16211D; --muted:#5A6862; --faint:#8A9791; --line:#D6DDD8;
+  --accent:#0D6A56; --accent-ink:#FFFFFF; --accent-soft:#DDEEE8; --accent-line:#A9D3C6;
+  --again:#B9402C; --again-soft:#F7E3DE; --hard:#A86F12; --hard-soft:#F6EBD6; --good:#2C7A47; --good-soft:#DFF0E4;
+  --zh:#33443E; --focus:#1F66D1;
+  --sans:"IBM Plex Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+  --serif:"Source Serif 4","Songti SC","Noto Serif CJK SC",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --hdr:56px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0E1412; --panel:#151D1A; --sunk:#1B2521; --ink:#E3EAE6; --muted:#9AA9A2; --faint:#6E7D76; --line:#28332F;
+  --accent:#4DB597; --accent-ink:#06231B; --accent-soft:#173129; --accent-line:#2B5D4E;
+  --again:#E57A65; --again-soft:#3A1F1A; --hard:#DBA64A; --hard-soft:#35291A; --good:#62BD80; --good-soft:#18301F;
+  --zh:#C4D2CC; --focus:#6FA4F2;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1412; --panel:#151D1A; --sunk:#1B2521; --ink:#E3EAE6; --muted:#9AA9A2; --faint:#6E7D76; --line:#28332F;
+  --accent:#4DB597; --accent-ink:#06231B; --accent-soft:#173129; --accent-line:#2B5D4E;
+  --again:#E57A65; --again-soft:#3A1F1A; --hard:#DBA64A; --hard-soft:#35291A; --good:#62BD80; --good-soft:#18301F;
+  --zh:#C4D2CC; --focus:#6FA4F2;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;padding-inline:16px;min-height:var(--hdr);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+.brand b{font-family:var(--mono);font-weight:500;color:var(--accent);font-size:15px}
+.brand span{color:var(--muted);font-weight:400;font-size:12px}
+.nav{display:flex;gap:2px;background:var(--sunk);padding:3px;border-radius:8px}
+.nav button{border:0;background:none;padding:6px 12px;border-radius:6px;color:var(--muted);font-weight:500}
+.nav button[aria-current="page"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.nav .count{font-family:var(--mono);font-size:11px;margin-left:4px;color:var(--accent)}
+.stats{margin-left:auto;display:flex;gap:18px;color:var(--muted);font-size:12px;flex-wrap:wrap}
+.stats strong{font-family:var(--mono);font-weight:500;color:var(--ink);font-size:13px}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:5px 10px}
+.banner{background:var(--hard-soft);color:var(--ink);border-bottom:1px solid var(--line);padding:8px 16px;font-size:12.5px}
+
+/* Layout */
+.app{display:grid;grid-template-columns:300px minmax(0,1fr) 390px;align-items:start;min-height:calc(100% - var(--hdr))}
+.tree{position:sticky;top:calc(var(--hdr) + env(safe-area-inset-top,0px));height:calc(100vh - var(--hdr));overflow:auto;border-right:1px solid var(--line);background:var(--panel);padding-block:12px 40px}
+.main{padding:28px 40px 80px;min-width:0}
+.aside{position:sticky;top:calc(var(--hdr) + env(safe-area-inset-top,0px));height:calc(100vh - var(--hdr));border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.app.wide .aside{display:none}
+.app.wide{grid-template-columns:300px minmax(0,1fr)}
+
+/* Tree */
+.part{padding-inline:12px;margin-bottom:14px}
+.part-h{display:flex;justify-content:space-between;align-items:baseline;padding:6px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.part-h .zh{letter-spacing:0;text-transform:none;font-size:13px;color:var(--ink);font-weight:600}
+.part-h>span:first-child{line-height:1.5}
+.sec{border-radius:6px}
+.sec-btn{width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:6px;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center}
+.sec-btn:hover{background:var(--sunk)}
+.sec.open>.sec-btn{background:var(--accent-soft)}
+.sec-t{font-weight:500;font-size:13px;line-height:1.3}
+.sec-en{grid-column:1/-1;font-size:11px;color:var(--faint);line-height:1.3}
+.sec-n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bar{grid-column:1/-1;height:3px;background:var(--sunk);border-radius:2px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .g{background:var(--good)}.bar .h{background:var(--hard)}.bar .a{background:var(--again)}
+.qlist{list-style:none;margin:4px 0 8px;padding:0 0 0 8px;border-left:1px solid var(--line);margin-left:14px}
+.qlist button{width:100%;text-align:left;border:0;background:none;padding:4px 8px;border-radius:5px;display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--muted);line-height:1.35}
+.qlist button:hover{background:var(--sunk);color:var(--ink)}
+.qlist button[aria-current="true"]{background:var(--sunk);color:var(--ink);font-weight:500}
+.qlist .qn{font-family:var(--mono);font-size:11px;min-width:22px;color:var(--faint)}
+.qlist .qt{flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--faint);flex:none;align-self:center}
+.dot.again{background:var(--again);border-color:var(--again)}
+.dot.hard{background:var(--hard);border-color:var(--hard)}
+.dot.good{background:var(--good);border-color:var(--good)}
+.dot.due{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--accent)}
+.zh-tag{font-size:10px;border:1px solid var(--accent-line);color:var(--accent);border-radius:3px;padding:0 4px;margin-left:4px;font-weight:500;vertical-align:1px}
+
+/* Study */
+.crumb{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.crumb .pg{font-family:var(--mono);color:var(--faint)}
+.sec-title{font-size:24px;line-height:1.25;margin:6px 0 2px;font-weight:600;text-wrap:balance}
+.sec-sub{color:var(--muted);margin:0 0 16px;font-family:var(--serif);font-size:15px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 18px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:5px 12px;font-size:12.5px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ghost{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:5px 12px;font-size:12.5px;color:var(--ink)}
+.ghost:hover{border-color:var(--faint)}
+.primary{border:0;background:var(--accent);color:var(--accent-ink);border-radius:7px;padding:7px 16px;font-weight:600;font-size:13px}
+.primary:disabled,.ghost:disabled{opacity:.5;cursor:default}
+details.intro{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:18px}
+details.intro summary{cursor:pointer;font-weight:500;font-size:13px;color:var(--muted)}
+details.intro[open] summary{margin-bottom:8px}
+.review-bar{display:flex;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:10px;padding:8px 14px;margin-bottom:16px;font-size:13px}
+.review-bar .ghost{margin-left:auto}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 28px}
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.qhead .qnum{font-family:var(--mono);font-weight:500;color:var(--accent);font-size:13px}
+.qhead .status{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{font-size:11px;border-radius:999px;padding:1px 8px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.again{background:var(--again-soft);border-color:transparent;color:var(--again)}
+.chip.hard{background:var(--hard-soft);border-color:transparent;color:var(--hard)}
+.chip.good{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.chip.acc{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.qtext{font-family:var(--serif);font-size:19px;line-height:1.5;margin:0;font-weight:600;max-width:70ch}
+.qtext.zh,.blk.zh{font-family:var(--sans);color:var(--zh)}
+.qtext.zh{font-size:16px;font-weight:500;margin-top:8px}
+.reading{font-family:var(--serif);font-size:16px;line-height:1.65}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-block:6px;border-bottom:1px dashed var(--line)}
+.pair:last-child{border-bottom:0}
+.blk{margin:0;max-width:68ch}
+.blk.zh{font-size:14.5px;line-height:1.7}
+.blk.li{padding-left:18px;position:relative}
+.blk.li::before{content:"";position:absolute;left:4px;top:.72em;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.blk.li.l2{margin-left:18px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.answer{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.answer h3,.selftest h3,.insight h3{font:600 11px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 12px}
+.selftest{margin-top:20px;padding:16px 18px;background:var(--sunk);border-radius:10px}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.checks label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.checks .inp{display:flex;align-items:center;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding-inline:8px}
+.checks .inp span{color:var(--faint);font-family:var(--mono)}
+.checks input{border:0;background:none;padding:6px 4px;width:100%;font-family:var(--mono);outline:none}
+.checks .res{font-family:var(--mono);font-size:12px}
+.checks .ok{color:var(--good)}.checks .bad{color:var(--again)}
+.actions{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.insight{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.insight>div{border-radius:10px;padding:12px 14px;font-size:13.5px}
+.insight .keys{background:var(--accent-soft)}
+.insight .trap{background:var(--again-soft)}
+.insight ul{margin:0;padding-left:18px}
+.rate{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rate button{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:600}
+.rate button small{font-weight:400;color:var(--muted);font-size:11px;font-family:var(--mono)}
+.rate .again:hover,.rate .again.on{border-color:var(--again);background:var(--again-soft);color:var(--again)}
+.rate .hard:hover,.rate .hard.on{border-color:var(--hard);background:var(--hard-soft);color:var(--hard)}
+.rate .good:hover,.rate .good.on{border-color:var(--good);background:var(--good-soft);color:var(--good)}
+.pager{display:flex;justify-content:space-between;margin-top:14px;gap:10px}
+.note-inline{margin-top:10px;font-size:12px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+
+/* Aside */
+.tabs{display:flex;border-bottom:1px solid var(--line);padding-inline:12px;gap:4px;flex:none}
+.tabs button{border:0;background:none;padding:12px 10px 10px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.tabs .ctx{margin-left:auto;align-self:center;font-size:11px;color:var(--faint);font-family:var(--mono)}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column}
+.pane[hidden]{display:none!important}
+.scroll{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.composer{border-top:1px solid var(--line);padding:12px 16px;display:flex;flex-direction:column;gap:8px;flex:none;background:var(--panel)}
+.composer textarea{width:100%;min-height:74px;max-height:220px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);line-height:1.5}
+.composer .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.composer .row .grow{flex:1}
+.hint{font-size:11.5px;color:var(--faint)}
+.note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.note .meta{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--faint);margin-bottom:4px;flex-wrap:wrap}
+.note .meta .sp{margin-left:auto;display:flex;gap:4px}
+.note .meta button{border:0;background:none;color:var(--muted);font-size:11px;padding:2px 4px;border-radius:4px}
+.note .meta button:hover{background:var(--sunk);color:var(--ink)}
+.note .meta button.danger{color:var(--again)}
+.note textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--bg)}
+.md{font-size:13.5px;line-height:1.6;overflow-wrap:anywhere}
+.md p{margin:0 0 6px}.md p:last-child{margin:0}
+.md ul,.md ol{margin:2px 0 6px;padding-left:20px}
+.md code{font-family:var(--mono);font-size:12px;background:var(--sunk);padding:0 4px;border-radius:3px}
+.md h4{margin:6px 0 4px;font-size:13px}
+.md blockquote{margin:0 0 6px;padding-left:10px;border-left:3px solid var(--accent-line);color:var(--muted)}
+.msg{max-width:92%;border-radius:12px;padding:8px 12px}
+.msg.user{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.msg.user .md code{background:rgb(255 255 255 / .2)}
+.msg.assistant{align-self:flex-start;background:var(--sunk)}
+.msg .who{font-size:10.5px;opacity:.7;margin-bottom:2px;font-family:var(--mono)}
+.msg.err{background:var(--again-soft);color:var(--again)}
+.summary-box{border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.summary-box textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--panel)}
+
+/* Selection popover */
+.sel-btn{position:fixed;z-index:40;border:0;background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgb(0 0 0 / .2)}
+.pop{position:fixed;z-index:41;width:min(380px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgb(0 0 0 / .18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-height:60vh}
+.pop .src{font-family:var(--serif);font-size:13px;color:var(--muted);border-left:3px solid var(--accent-line);padding-left:8px;max-height:4.8em;overflow:hidden}
+.pop .body{overflow:auto}
+.pop .row{display:flex;gap:8px;justify-content:flex-end}
+
+/* Other views */
+.view-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.view-h h2{margin:0;font-size:22px}
+.view-h p{margin:0;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tile .v{font-family:var(--mono);font-size:24px;font-weight:500}
+.tile .l{font-size:12px;color:var(--muted)}
+.tile.due .v{color:var(--accent)}
+table.rev{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tbl{overflow-x:auto}
+table.rev th,table.rev td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13px}
+table.rev th{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--sunk)}
+table.rev td.n{font-family:var(--mono);text-align:right}
+table.rev tr:last-child td{border-bottom:0}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.filters select,.filters input{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:5px 8px;font-size:13px}
+.filters input{min-width:180px;flex:1;max-width:320px}
+.nb-sec{margin-bottom:22px}
+.nb-sec h3{font-size:14px;margin:0 0 8px;display:flex;gap:8px;align-items:baseline}
+.nb-sec h3 small{color:var(--faint);font-weight:400}
+.nb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.qlink{border:0;background:none;padding:0;color:var(--accent);font-size:11px;text-align:left}
+.story-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.story{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.story h3{margin:0;font-size:14px}
+.story .guide{font-size:12px;color:var(--muted);margin:0}
+.story textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);line-height:1.55;resize:vertical}
+.story .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.story .row .hint{margin-right:auto}
+.story .fb{border-top:1px dashed var(--line);padding-top:8px}
+.section-h{font-size:15px;margin:28px 0 10px;display:flex;gap:10px;align-items:baseline}
+.section-h small{color:var(--faint);font-weight:400;font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;z-index:60}
+
+@media (max-width:1240px){
+  .app{grid-template-columns:280px minmax(0,1fr)}
+  .aside{grid-column:2;position:static;height:auto;min-height:520px;border-left:0;border-top:1px solid var(--line);margin:0 40px 40px;border:1px solid var(--line);border-radius:12px}
+  .aside .scroll{max-height:60vh}
+}
+@media (max-width:900px){
+  .menu-btn{display:inline-block}
+  .app,.app.wide{grid-template-columns:minmax(0,1fr)}
+  .tree{position:fixed;left:0;top:0;bottom:0;width:min(320px,86vw);height:auto;z-index:30;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 40px rgb(0 0 0 / .25);padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  .tree.show{transform:none}
+  .main{padding:18px 16px 40px}
+  .aside{grid-column:1;margin:0 16px 32px}
+  .card{padding:18px 16px}
+  .pair{grid-template-columns:1fr;gap:4px}
+  .insight{grid-template-columns:1fr}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .stats{display:none}
+  .nav button{padding:6px 9px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="hdr">
+  <button class="menu-btn" id="menuBtn" aria-label="打开目录">目录</button>
+  <div class="brand"><b>IB·400</b> 学习台 <span>BIWS 2025</span></div>
+  <nav class="nav" id="nav" aria-label="视图">
+    <button data-view="study" aria-current="page">学习</button>
+    <button data-view="review">复习<span class="count" id="dueCount"></span></button>
+    <button data-view="notebook">笔记本</button>
+    <button data-view="stories">Story Bank</button>
+  </nav>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="banner" id="banner" hidden></div>
+<div class="app" id="app">
+  <aside class="tree" id="tree" aria-label="知识树"></aside>
+  <main class="main" id="main"><p class="empty">正在加载书本内容…</p></main>
+  <section class="aside" id="aside" aria-label="笔记与对话">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabNotes" aria-selected="true" data-tab="notes">笔记</button>
+      <button role="tab" id="tabChat" aria-selected="false" data-tab="chat">问 Claude</button>
+      <span class="ctx" id="asideCtx"></span>
+    </div>
+    <div class="pane" id="paneNotes">
+      <div class="scroll" id="noteList"></div>
+      <div class="composer">
+        <textarea id="noteInput" placeholder="记下这道题的理解、疑问或口述要点…"></textarea>
+        <div class="row">
+          <div class="seg" id="noteKind" hidden>
+            <button data-kind="note" aria-pressed="true">笔记</button>
+            <button data-kind="idea" aria-pressed="false">Story 灵感</button>
+          </div>
+          <span class="hint grow" id="noteHint">关联到当前题目</span>
+          <button class="primary" id="noteSave">保存笔记</button>
+        </div>
+      </div>
+    </div>
+    <div class="pane" id="paneChat" hidden>
+      <div class="scroll" id="chatList"></div>
+      <div class="composer">
+        <div id="summaryArea"></div>
+        <textarea id="chatInput" placeholder="就当前题目提问，比如：为什么 CFS 里要冲回收益？"></textarea>
+        <div class="row">
+          <button class="ghost" id="chatSummarize">总结到笔记</button>
+          <button class="ghost" id="chatClear">清空</button>
+          <span class="grow"></span>
+          <button class="ghost" id="chatStop" hidden>停止</button>
+          <button class="primary" id="chatSend">发送</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<button class="sel-btn" id="selBtn" hidden>翻译 / 解释</button>
+<div class="pop" id="pop" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAY = 86400000;
+
+/* ---------- State ---------- */
+const S = {
+  book: null, parts: [], secs: {}, qs: {}, order: [],
+  zh: {}, aitx: {}, progress: {}, notes: [], stories: {}, chat: { sid: null, turns: [] },
+  view: "study", sid: null, qid: null, lang: "both", revealed: false, checked: null,
+  openSecs: new Set(), review: null, noteKind: "note", tab: "notes",
+  nbFilter: { part: "", src: "", status: "", q: "" }, editing: null, confirmDel: null,
+};
+let db = null, sample = null, downloads = null, dbReady = false;
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("ib400:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("ib400:" + k, JSON.stringify(v)); } catch {} },
+};
+
+/* ---------- Text rendering ---------- */
+function inl(s) {
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(“"'>])_(\S(?:.*?\S)?)_(?=[\s.,;:!?)”"'<]|$)/g, "$1<em>$2</em>")
+    .replace(/(^|[^*\w])\*(\S(?:[^*]*?\S)?)\*(?!\*)/g, "$1<em>$2</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+function md(text) {
+  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  let out = "", list = null, para = [];
+  const flushP = () => { if (para.length) { out += "<p>" + inl(para.join(" ")) + "</p>"; para = []; } };
+  const closeL = () => { if (list) { out += `</${list}>`; list = null; } };
+  for (const raw of lines) {
+    const l = raw.trimEnd();
+    let m;
+    if (!l.trim()) { flushP(); closeL(); continue; }
+    if ((m = l.match(/^#{1,4}\s+(.*)/))) { flushP(); closeL(); out += "<h4>" + inl(m[1]) + "</h4>"; continue; }
+    if ((m = l.match(/^>\s?(.*)/))) { flushP(); closeL(); out += "<blockquote>" + inl(m[1]) + "</blockquote>"; continue; }
+    if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { flushP(); if (list !== "ul") { closeL(); out += "<ul>"; list = "ul"; } out += "<li>" + inl(m[1]) + "</li>"; continue; }
+    if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if (list !== "ol") { closeL(); out += "<ol>"; list = "ol"; } out += "<li>" + inl(m[1]) + "</li>"; continue; }
+    closeL(); para.push(l.trim());
+  }
+  flushP(); closeL();
+  return out;
+}
+const plain = s => String(s || "").replace(/\*\*|__|(?<!\w)_|_(?!\w)|\*/g, "");
+
+/* ---------- Content ---------- */
+async function loadBook() {
+  const res = await fetch("content/book.json");
+  if (!res.ok) throw new Error("book " + res.status);
+  S.book = await res.json();
+  S.parts = S.book.parts;
+  for (const p of S.parts) for (const s of p.sections) {
+    s.pid = p.id; S.secs[s.id] = s;
+    s.questions.forEach((q, i) => { q.sid = s.id; q.i = i; S.qs[q.id] = q; S.order.push(q.id); });
+  }
+}
+async function loadZh(sid) {
+  const s = S.secs[sid];
+  if (!s || !s.zh || S.zh[sid]) return;
+  try { const r = await fetch(`content/zh/${sid}.json`); if (r.ok) S.zh[sid] = await r.json(); } catch {}
+}
+function zhOf(q) {
+  const z = S.zh[q.sid]?.questions?.[q.id];
+  if (z) return { ...z, kind: "book" };
+  const t = S.aitx[q.id];
+  if (t && Array.isArray(t.a) && t.a.length === q.a.length) return { q: t.q, a: t.a, kind: "ai" };
+  return null;
+}
+
+/* ---------- Spaced repetition ---------- */
+const RATES = { again: "不会", hard: "模糊", good: "会" };
+function nextSched(p, r, now = Date.now()) {
+  const cur = p || { ease: 2.5, ivl: 0, reps: 0, lapses: 0 };
+  let { ease, ivl, reps, lapses } = cur;
+  if (r === "again") { reps = 0; lapses++; ivl = 0; ease = Math.max(1.3, ease - 0.2); }
+  else if (r === "hard") { ivl = reps === 0 ? 1 : Math.max(ivl + 1, Math.round(ivl * 1.2)); ease = Math.max(1.3, ease - 0.15); reps++; }
+  else { ivl = reps === 0 ? 1 : reps === 1 ? 3 : Math.max(ivl + 1, Math.round(ivl * ease)); reps++; }
+  const due = ivl === 0 ? now + 10 * 60000 : startOfDay(now) + ivl * DAY;
+  return { rating: r, ease: +ease.toFixed(2), ivl, reps, lapses, due, last: now };
+}
+function startOfDay(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function ivlLabel(p, r) { const n = nextSched(p, r); return n.ivl === 0 ? "10 分钟" : n.ivl + " 天"; }
+const isDue = p => p && p.due <= Date.now();
+function dueList() {
+  const end = startOfDay(Date.now()) + DAY;
+  return S.order.filter(id => S.progress[id] && S.progress[id].due < end).sort((a, b) => S.progress[a].due - S.progress[b].due);
+}
+
+/* ---------- Persistence ---------- */
+function setBanner(msg) { const b = $("#banner"); b.textContent = msg || ""; b.hidden = !msg; }
+async function dbWrite(fn, what) {
+  if (!db) { toast("未连接云端存储，" + what + "只保存在本页"); return false; }
+  try { await fn(); return true; }
+  catch (e) {
+    if (e?.code === "unavailable") { await new Promise(r => setTimeout(r, 400 + Math.random() * 600)); try { await fn(); return true; } catch {} }
+    toast(what + "保存失败：" + (e?.code === "quota_exceeded" ? "存储已满，请删除一些旧笔记" : "请稍后重试"));
+    return false;
+  }
+}
+function subscribe() {
+  db.collection("progress").limit(1000).onSnapshot(snap => {
+    const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); }); S.progress = m; dbReady = true; refresh("progress");
+  }, onDbErr);
+  db.collection("notes").limit(1000).onSnapshot(snap => {
+    S.notes = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.created || 0) - (a.created || 0)); refresh("notes");
+  }, onDbErr);
+  db.collection("aitx").limit(1000).onSnapshot(snap => {
+    const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); }); S.aitx = m; refresh("aitx");
+  }, onDbErr);
+  db.doc("stories/core").onSnapshot(d => { S.stories = d.exists ? { ...d.data() } : {}; refresh("stories"); }, onDbErr);
+}
+let chatUnsub = null;
+function subscribeChat(sid) {
+  if (S.chat.sid === sid) return;
+  chatUnsub?.(); S.chat = { sid, turns: [] }; renderChat();
+  if (!db) return;
+  chatUnsub = db.doc("chats/" + sid).onSnapshot(d => {
+    if (S.chat.sid !== sid || chatBusy) return;
+    S.chat.turns = d.exists ? (d.data().turns || []) : []; renderChat();
+  }, onDbErr);
+}
+function onDbErr(e) { if (e?.code !== "revoked") setBanner("云端存储连接中断，刷新页面可重新连接。"); }
+
+/* ---------- Refresh orchestration ---------- */
+function refresh(kind) {
+  renderStats();
+  if (kind === "progress" || kind === "aitx") { renderTree(); if (S.view === "study") renderStudy(true); }
+  if (S.view === "review" && kind === "progress") renderReview();
+  if (kind === "notes") { renderNotes(); if (S.view === "notebook") renderNotebook(); if (S.view === "stories") renderStories(); }
+  if (kind === "stories" && S.view === "stories") renderStories();
+}
+
+/* ---------- Header / stats ---------- */
+function renderStats() {
+  const vals = Object.values(S.progress);
+  const learned = vals.length, mastered = vals.filter(p => p.rating === "good").length, due = dueList().length;
+  $("#stats").innerHTML = `<span>已学 <strong>${learned}</strong>/${S.order.length}</span><span>会 <strong>${mastered}</strong></span><span>今日待复习 <strong>${due}</strong></span><span>笔记 <strong>${S.notes.length}</strong></span>`;
+  $("#dueCount").textContent = due ? due : "";
+}
+
+/* ---------- Tree ---------- */
+function statusOf(id) { return S.progress[id]?.rating || ""; }
+function renderTree() {
+  const el = $("#tree"), top = el.scrollTop;
+  let h = "";
+  for (const p of S.parts) {
+    const pq = p.sections.flatMap(s => s.questions.map(q => q.id));
+    const done = pq.filter(id => S.progress[id]).length;
+    h += `<div class="part"><div class="part-h"><span><span class="zh">${esc(p.titleZh)}</span><br>${esc(p.title.replace(/ Interview Questions$| Questions \(Generalist\)$|-Specific Technical Questions$/, ""))}</span><span class="mono">${done}/${pq.length}</span></div>`;
+    for (const s of p.sections) {
+      const n = s.questions.length;
+      const c = { good: 0, hard: 0, again: 0 };
+      s.questions.forEach(q => { const r = statusOf(q.id); if (r) c[r]++; });
+      const open = S.openSecs.has(s.id);
+      const label = n ? `${c.good + c.hard + c.again}/${n}` : "导读";
+      h += `<div class="sec${open ? " open" : ""}"><button class="sec-btn" data-sec="${s.id}" aria-expanded="${open}">
+        <span class="sec-t">${esc(s.titleZh)}${s.zh ? '<span class="zh-tag">中</span>' : ""}</span><span class="sec-n">${label}</span>
+        <span class="sec-en">${esc(s.title)}</span>
+        ${n ? `<span class="bar"><i class="g" style="width:${c.good / n * 100}%"></i><i class="h" style="width:${c.hard / n * 100}%"></i><i class="a" style="width:${c.again / n * 100}%"></i></span>` : ""}
+      </button>`;
+      if (open && n) {
+        h += `<ul class="qlist">`;
+        for (const q of s.questions) {
+          const z = zhOf(q), p2 = S.progress[q.id];
+          h += `<li><button data-q="${q.id}" aria-current="${q.id === S.qid}"><span class="dot ${p2?.rating || ""}${isDue(p2) ? " due" : ""}"></span><span class="qn">Q${q.n}</span><span class="qt">${esc(plain(z ? z.q : q.q))}</span></button></li>`;
+        }
+        h += `</ul>`;
+      }
+      h += `</div>`;
+    }
+    h += `</div>`;
+  }
+  el.innerHTML = h;
+  el.scrollTop = top;
+}
+$("#tree").addEventListener("click", e => {
+  const sb = e.target.closest("[data-sec]"), qb = e.target.closest("[data-q]");
+  if (qb) { openQuestion(qb.dataset.q); closeDrawer(); return; }
+  if (sb) {
+    const sid = sb.dataset.sec, s = S.secs[sid];
+    if (S.openSecs.has(sid) && S.sid === sid) S.openSecs.delete(sid); else S.openSecs.add(sid);
+    if (!s.questions.length) { openSection(sid); closeDrawer(); }
+    else if (S.sid !== sid) { const first = s.questions.find(q => !S.progress[q.id]) || s.questions[0]; openQuestion(first.id); }
+    else renderTree();
+    store.set("open", [...S.openSecs]);
+  }
+});
+function closeDrawer() { $("#tree").classList.remove("show"); }
+$("#menuBtn").onclick = () => $("#tree").classList.toggle("show");
+
+/* ---------- Navigation ---------- */
+async function openSection(sid) {
+  S.sid = sid; S.qid = null; S.revealed = false; S.checked = null;
+  await loadZh(sid);
+  subscribeChat(sid);
+  setView("study");
+}
+async function openQuestion(qid) {
+  const q = S.qs[qid]; if (!q) return;
+  const changed = S.qid !== qid;
+  S.sid = q.sid; S.qid = qid; S.openSecs.add(q.sid);
+  if (changed) { S.revealed = false; S.checked = null; }
+  await loadZh(q.sid);
+  subscribeChat(q.sid);
+  store.set("last", qid);
+  try { history.replaceState(null, "", "#" + qid); } catch {}
+  if (S.view !== "study") setView("study"); else { renderTree(); renderStudy(); renderNotes(); renderAsideCtx(); }
+  $("#main").scrollIntoView?.({ block: "start" });
+  window.scrollTo?.({ top: 0 });
+}
+function setView(v) {
+  S.view = v;
+  document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
+  $("#app").classList.toggle("wide", v !== "study");
+  $("#tree").hidden = false;
+  if (v === "study") { renderTree(); renderStudy(); renderNotes(); renderAsideCtx(); }
+  if (v === "review") renderReview();
+  if (v === "notebook") renderNotebook();
+  if (v === "stories") renderStories();
+  window.scrollTo?.({ top: 0 });
+}
+$("#nav").addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) setView(b.dataset.view); });
+
+/* ---------- Study view ---------- */
+function blocksHTML(en, zh, lang) {
+  const one = (b, txt, cls) => `<p class="blk ${b.t === "li" ? "li" + (b.lvl === 2 ? " l2" : "") : ""} ${cls}">${inl(txt)}</p>`;
+  if (lang === "en" || !zh) return `<div class="stack reading">${en.map(b => one(b, b.md, "")).join("")}</div>`;
+  if (lang === "zh") return `<div class="stack">${en.map((b, i) => one(b, zh[i], "zh")).join("")}</div>`;
+  return `<div class="reading">${en.map((b, i) => `<div class="pair">${one(b, b.md, "")}${one(b, zh[i], "zh")}</div>`).join("")}</div>`;
+}
+function langSeg() {
+  return `<div class="seg" role="group" aria-label="语言">${[["en", "EN"], ["zh", "中"], ["both", "对照"]].map(([k, l]) => `<button data-lang="${k}" aria-pressed="${S.lang === k}">${l}</button>`).join("")}</div>`;
+}
+function renderStudy(soft) {
+  const main = $("#main");
+  if (!S.sid) { main.innerHTML = `<p class="empty">从左侧知识树选择一个小节开始。</p>`; return; }
+  if (soft && main.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
+  const s = S.secs[S.sid], p = S.parts.find(x => x.id === s.pid), zs = S.zh[s.id];
+  const q = S.qid ? S.qs[S.qid] : null;
+  let h = "";
+  if (S.review) {
+    const i = S.review.queue.indexOf(S.qid);
+    h += `<div class="review-bar"><strong>复习模式</strong><span class="mono">${Math.max(i + 1, 1)} / ${S.review.queue.length}</span><span>按“不会 / 模糊 / 会”自评后自动进入下一题</span><button class="ghost" data-act="exitReview">退出复习</button></div>`;
+  }
+  h += `<div class="crumb"><span>${esc(p.titleZh)}</span><span>›</span><span>${esc(s.titleZh)}</span><span class="pg">p.${s.page}</span></div>`;
+  h += `<h1 class="sec-title">${esc(s.title)}</h1><p class="sec-sub">${esc(zs?.summaryZh || s.titleZh)}</p>`;
+  h += `<div class="toolbar">${langSeg()}${!s.zh ? `<span class="hint">本节中文译文尚未生成，可划词翻译或让 Claude 临时翻译单题</span>` : ""}</div>`;
+  if (s.introBlocks.length) {
+    const zi = zs?.intro;
+    h += `<details class="intro"${!q ? " open" : ""}><summary>本节导读 · ${s.introBlocks.length} 段</summary>${blocksHTML(s.introBlocks, zi, zi ? S.lang : "en")}</details>`;
+  }
+  if (!q) {
+    h += s.questions.length ? `<button class="primary" data-q="${s.questions[0].id}">从 Q1 开始</button>` : `<p class="hint">这是导读页，没有题目。阅读后可以直接进入下一小节。</p>`;
+    main.innerHTML = h; return;
+  }
+  const z = zhOf(q), prog = S.progress[q.id];
+  const tr = S.lang !== "en" && z;
+  h += `<article class="card" id="reading"><div class="qhead"><span class="qnum">Q${q.n}</span><span>/ ${s.questions.length}</span><span class="mono">p.${q.page}</span>
+    <span class="status">${z?.kind === "ai" ? '<span class="chip">Claude 临时译文</span>' : ""}${prog ? `<span class="chip ${prog.rating}">${RATES[prog.rating]}</span><span class="chip">${prog.due <= Date.now() ? "待复习" : "下次 " + fmtDate(prog.due)}</span>` : '<span class="chip">未学</span>'}</span></div>`;
+  h += S.lang !== "zh" || !z ? `<p class="qtext">${inl(q.q)}</p>` : "";
+  h += tr ? `<p class="qtext zh">${inl(z.q)}</p>` : "";
+  if (S.lang !== "en" && !z && sample) h += `<div class="actions"><button class="ghost" data-act="aitx">让 Claude 翻译本题</button><span class="hint" id="aitxMsg"></span></div>`;
+
+  const chk = S.zh[q.sid]?.questions?.[q.id]?.check;
+  if (!S.revealed) {
+    if (chk?.length) {
+      h += `<div class="selftest"><h3>先算再看 · 自测</h3><div class="checks">${chk.map((c, i) => `<label for="ck${i}">${esc(c.label)}<span class="inp"><span>$</span><input id="ck${i}" inputmode="decimal" placeholder="如 -75" autocomplete="off"><span>${esc(c.unit)}</span></span></label>`).join("")}</div>
+        <div class="actions"><button class="primary" data-act="check">核对并显示答案</button><button class="ghost" data-act="reveal">直接看答案</button></div></div>`;
+    } else {
+      h += `<div class="actions" style="margin-top:22px"><button class="primary" data-act="reveal">显示答案</button><span class="hint">先用英文口述一遍你的答案，再展开对照</span></div>`;
+    }
+  } else {
+    if (chk?.length && S.checked) {
+      h += `<div class="selftest"><h3>自测结果</h3><div class="checks">${chk.map((c, i) => { const v = S.checked[i]; const ok = v != null && Math.abs(v - c.value) < 0.01; return `<label>${esc(c.label)}<span class="res ${v == null ? "" : ok ? "ok" : "bad"}">${v == null ? "未填" : (ok ? "✓ " : "✗ 你填 " + fmtN(v) + " · ")}正确 ${fmtN(c.value)}${esc(c.unit)}</span></label>`; }).join("")}</div></div>`;
+    }
+    h += `<div class="answer"><h3>书中答案</h3>${blocksHTML(q.a, z?.a, tr ? S.lang : "en")}</div>`;
+    const zb = S.zh[q.sid]?.questions?.[q.id];
+    if (zb?.keys) h += `<div class="insight"><div class="keys"><h3>要点</h3><ul>${zb.keys.map(k => `<li>${inl(k)}</li>`).join("")}</ul></div><div class="trap"><h3>易错点</h3>${inl(zb.trap || "")}</div></div>`;
+    h += `<div class="rate" role="group" aria-label="自评">${Object.entries(RATES).map(([k, l]) => `<button class="${k}${prog?.rating === k ? " on" : ""}" data-rate="${k}">${l}<small>${ivlLabel(prog, k)}后再见</small></button>`).join("")}</div>`;
+  }
+  h += `</article>`;
+  const i = q.i, prev = s.questions[i - 1], next = s.questions[i + 1];
+  const nextSec = !next ? nextSection(s.id) : null;
+  h += `<div class="pager">${prev ? `<button class="ghost" data-q="${prev.id}">← Q${prev.n}</button>` : "<span></span>"}${next ? `<button class="ghost" data-q="${next.id}">Q${next.n} →</button>` : nextSec ? `<button class="ghost" data-sec-go="${nextSec.id}">下一节：${esc(nextSec.titleZh)} →</button>` : ""}</div>`;
+  const nq = S.notes.filter(n => n.qid === q.id).length;
+  if (nq) h += `<p class="note-inline">这道题有 ${nq} 条笔记，见右侧“笔记”。</p>`;
+  main.innerHTML = h;
+}
+function nextSection(sid) {
+  const all = S.parts.flatMap(p => p.sections); const i = all.findIndex(s => s.id === sid); return all[i + 1] || null;
+}
+const fmtN = v => (v > 0 ? "+" : "") + (Number.isInteger(v) ? v : v.toFixed(1));
+function fmtDate(t) { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()}`; }
+
+$("#main").addEventListener("click", async e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.lang) { S.lang = t.dataset.lang; store.set("lang", S.lang); renderStudy(); return; }
+  if (t.dataset.q) { openQuestion(t.dataset.q); return; }
+  if (t.dataset.secGo) { const s = S.secs[t.dataset.secGo]; S.openSecs.add(s.id); s.questions.length ? openQuestion(s.questions[0].id) : openSection(s.id); return; }
+  if (t.dataset.rate) { rate(t.dataset.rate); return; }
+  const act = t.dataset.act;
+  if (act === "reveal") { S.revealed = true; renderStudy(); }
+  if (act === "check") {
+    const chk = S.zh[S.sid]?.questions?.[S.qid]?.check || [];
+    S.checked = chk.map((_, i) => { const v = parseFloat(String($("#ck" + i)?.value || "").replace(/[,$\s]/g, "").replace(/^\((.*)\)$/, "-$1")); return isNaN(v) ? null : v; });
+    S.revealed = true; renderStudy();
+  }
+  if (act === "exitReview") { S.review = null; renderStudy(); }
+  if (act === "aitx") aiTranslate(S.qid, t);
+  if (act === "startReview") startReview(t.dataset.sid || null);
+});
+$("#main").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches(".checks input")) { e.preventDefault(); $('[data-act="check"]')?.click(); }
+});
+
+async function rate(r) {
+  const qid = S.qid, p = S.progress[qid], n = nextSched(p, r);
+  S.progress = { ...S.progress, [qid]: n };
+  dbWrite(() => db.doc("progress/" + qid).set(n), "进度");
+  const q = S.qs[qid];
+  let nextId = null;
+  if (S.review) {
+    const qu = S.review.queue, i = qu.indexOf(qid);
+    if (r === "again") qu.push(qid);
+    nextId = qu.slice(i + 1).find(Boolean) || null;
+    if (!nextId) { S.review = null; toast("本轮复习完成"); renderTree(); renderStudy(); renderStats(); return; }
+  } else {
+    const s = S.secs[q.sid]; nextId = s.questions[q.i + 1]?.id || null;
+    if (!nextId) { toast("本节已全部过一遍"); renderTree(); renderStudy(); renderStats(); return; }
+  }
+  openQuestion(nextId); renderStats();
+}
+
+async function aiTranslate(qid, btn) {
+  const q = S.qs[qid]; if (!sample || !q) return;
+  btn.disabled = true; const msg = $("#aitxMsg"); msg.textContent = "Claude 正在翻译…";
+  const payload = { q: q.q, a: q.a.map(b => b.md) };
+  try {
+    const out = await sample.json(`把下面这道投行面试题及其答案翻译成简体中文，给在日本做 PE/VC 投资的中文读者看。要求：金融术语保留常用英文缩写（如 EV、EBITDA、WACC、CFO），译文自然、准确；保留 **加粗** 和 _斜体_ 标记；数组长度与原文一致，逐段对应。
+只回复 JSON：{"q": "题目译文", "a": ["第1段译文", "第2段译文", ...]}
+
+原文：
+${JSON.stringify(payload)}`, { modelTier: "default" });
+    if (!out || typeof out.q !== "string" || !Array.isArray(out.a) || out.a.length !== q.a.length) throw { code: "invalid_json" };
+    const doc = { q: out.q, a: out.a.map(String), ts: Date.now() };
+    S.aitx = { ...S.aitx, [qid]: doc };
+    dbWrite(() => db.doc("aitx/" + qid).set(doc), "译文");
+    renderStudy(); renderTree();
+  } catch (e) { msg.textContent = sampleErr(e); btn.disabled = false; }
+}
+
+/* ---------- Review view ---------- */
+function startReview(sid) {
+  let q = dueList(); if (sid) q = q.filter(id => S.qs[id].sid === sid);
+  if (!q.length) { toast("暂无待复习题目"); return; }
+  S.review = { queue: q }; S.revealed = false;
+  openQuestion(q[0]).then(() => { if (S.view !== "study") setView("study"); else renderStudy(); });
+}
+function renderReview() {
+  const due = dueList(), vals = Object.entries(S.progress);
+  const weak = vals.filter(([, p]) => p.rating !== "good").map(([id]) => id);
+  const bySec = {};
+  due.forEach(id => { const s = S.qs[id]?.sid; if (s) bySec[s] = (bySec[s] || 0) + 1; });
+  const soon = vals.filter(([, p]) => p.due >= startOfDay(Date.now()) + DAY && p.due < startOfDay(Date.now()) + 8 * DAY).length;
+  let h = `<div class="view-h"><h2>复习</h2><p>按间隔重复排期：不会 → 10 分钟后再见，模糊 → 间隔略增，会 → 1 天、3 天、之后按熟练度拉长。</p></div>
+  <div class="tiles"><div class="tile due"><div class="v">${due.length}</div><div class="l">今日待复习</div></div>
+  <div class="tile"><div class="v">${soon}</div><div class="l">未来 7 天到期</div></div>
+  <div class="tile"><div class="v">${weak.length}</div><div class="l">不会 / 模糊</div></div>
+  <div class="tile"><div class="v">${vals.length}<span style="font-size:14px;color:var(--faint)">/${S.order.length}</span></div><div class="l">已学题目</div></div></div>`;
+  h += `<div class="actions" style="margin:0 0 18px"><button class="primary" data-act="startReview" ${due.length ? "" : "disabled"}>开始复习全部（${due.length}）</button>${!vals.length ? '<span class="hint">还没有学过的题目。去“学习”里对题目自评后，它们会出现在这里。</span>' : ""}</div>`;
+  if (Object.keys(bySec).length) {
+    h += `<div class="tbl"><table class="rev"><thead><tr><th>小节</th><th>大部分</th><th style="text-align:right">待复习</th><th></th></tr></thead><tbody>`;
+    for (const [sid, n] of Object.entries(bySec).sort((a, b) => b[1] - a[1])) {
+      const s = S.secs[sid], p = S.parts.find(x => x.id === s.pid);
+      h += `<tr><td>${esc(s.titleZh)}<div class="hint">${esc(s.title)}</div></td><td>${esc(p.titleZh)}</td><td class="n">${n}</td><td><button class="ghost" data-act="startReview" data-sid="${sid}">复习本节</button></td></tr>`;
+    }
+    h += `</tbody></table></div>`;
+  }
+  if (weak.length) {
+    h += `<h3 class="section-h">薄弱题 <small>最近一次自评为“不会”或“模糊”</small></h3><div class="nb-grid">`;
+    for (const id of weak.slice(0, 60)) {
+      const q = S.qs[id]; if (!q) continue; const z = zhOf(q), p = S.progress[id];
+      h += `<div class="note"><div class="meta"><span class="chip ${p.rating}">${RATES[p.rating]}</span><span>${esc(S.secs[q.sid].titleZh)} · Q${q.n}</span></div><button class="qlink" data-q="${id}" style="font-size:13px;color:var(--ink)">${esc(plain(z ? z.q : q.q))}</button></div>`;
+    }
+    h += `</div>`;
+  }
+  $("#main").innerHTML = h;
+}
+
+/* ---------- Notes (aside) ---------- */
+function notesForCtx() {
+  if (S.qid) return S.notes.filter(n => n.qid === S.qid || (!n.qid && n.sid === S.sid));
+  return S.notes.filter(n => n.sid === S.sid);
+}
+const SRC = { me: "我写的", claude: "Claude 总结", select: "划词", idea: "Story 灵感" };
+function noteSrcKey(n) { return n.kind === "idea" ? "idea" : n.src || "me"; }
+function noteCard(n, withLink) {
+  const q = n.qid ? S.qs[n.qid] : null, s = S.secs[n.sid];
+  const where = q ? `${esc(s?.titleZh || "")} · Q${q.n}` : s ? esc(s.titleZh) + " · 本节" : "Story Bank";
+  const k = noteSrcKey(n);
+  const editing = S.editing === n.id, confirm = S.confirmDel === n.id;
+  return `<div class="note" data-note="${n.id}"><div class="meta"><span class="chip ${k === "claude" ? "acc" : k === "idea" ? "hard" : ""}">${SRC[k]}</span>
+    ${withLink && (q || s) ? `<button class="qlink" data-go="${n.qid || ""}" data-gosec="${n.sid || ""}">${where}</button>` : !withLink && !n.qid ? `<span>本节</span>` : ""}
+    <span class="mono">${fmtDate(n.updated || n.created)}</span>
+    <span class="sp">${confirm ? `<button class="danger" data-nact="delyes">确认删除</button><button data-nact="delno">取消</button>` : editing ? "" : `<button data-nact="edit">编辑</button><button data-nact="del">删除</button>`}</span></div>
+    ${editing ? `<textarea id="edit-${n.id}">${esc(n.text)}</textarea><div class="row" style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px"><button class="ghost" data-nact="cancel">取消</button><button class="primary" data-nact="save">保存</button></div>` : `<div class="md">${md(n.text)}</div>`}</div>`;
+}
+function renderNotes() {
+  const list = $("#noteList"); if (!list) return;
+  const isFit = S.sid && S.secs[S.sid]?.pid === "fit";
+  $("#noteKind").hidden = !isFit;
+  if (!isFit && S.noteKind === "idea") setNoteKind("note");
+  $("#noteHint").textContent = S.qid ? `关联到 ${S.secs[S.sid].titleZh} · Q${S.qs[S.qid].n}` : S.sid ? `关联到本节` : "";
+  const ns = notesForCtx();
+  list.innerHTML = ns.length ? ns.map(n => noteCard(n, false)).join("") : `<p class="hint">这道题还没有笔记。写下的笔记会自动汇总到“笔记本”，方便复习。</p>`;
+}
+function setNoteKind(k) {
+  S.noteKind = k;
+  document.querySelectorAll("#noteKind button").forEach(b => b.setAttribute("aria-pressed", b.dataset.kind === k));
+  $("#noteInput").placeholder = k === "idea" ? "记一个以后可以用在 Fit 面试里的故事素材…" : "记下这道题的理解、疑问或口述要点…";
+}
+$("#noteKind").addEventListener("click", e => { const b = e.target.closest("[data-kind]"); if (b) setNoteKind(b.dataset.kind); });
+async function addNote(text, src, extra = {}) {
+  const now = Date.now();
+  const n = { sid: S.sid || null, qid: S.qid || null, pid: S.sid ? S.secs[S.sid].pid : null, text, src, kind: "note", created: now, updated: now, ...extra };
+  if (!db) { S.notes = [{ id: "local-" + now, ...n }, ...S.notes]; refresh("notes"); toast("未连接云端存储，笔记只保存在本页"); return true; }
+  return dbWrite(() => db.collection("notes").add(n), "笔记");
+}
+$("#noteSave").onclick = async () => {
+  const t = $("#noteInput").value.trim(); if (!t) return;
+  const ok = await addNote(t, "me", { kind: S.noteKind });
+  if (ok !== false) { $("#noteInput").value = ""; store.set("draft", ""); toast(S.noteKind === "idea" ? "已存入 Story Bank 灵感" : "笔记已保存"); }
+};
+$("#noteInput").addEventListener("input", e => store.set("draft", e.target.value));
+$("#noteInput").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("#noteSave").click(); });
+
+async function noteAction(e) {
+  const go = e.target.closest("[data-go]");
+  if (go) { if (go.dataset.go) openQuestion(go.dataset.go); else if (go.dataset.gosec) openSection(go.dataset.gosec); return; }
+  const b = e.target.closest("[data-nact]"); if (!b) return;
+  const id = b.closest("[data-note]").dataset.note, n = S.notes.find(x => x.id === id), a = b.dataset.nact;
+  if (a === "edit") { S.editing = id; S.confirmDel = null; }
+  if (a === "cancel") S.editing = null;
+  if (a === "del") { S.confirmDel = id; S.editing = null; }
+  if (a === "delno") S.confirmDel = null;
+  if (a === "save") {
+    const v = $("#edit-" + id).value.trim(); S.editing = null;
+    if (v && v !== n.text) { if (db && !id.startsWith("local-")) await dbWrite(() => db.doc("notes/" + id).update({ text: v, updated: Date.now() }), "笔记"); else n.text = v; }
+  }
+  if (a === "delyes") {
+    S.confirmDel = null;
+    if (db && !id.startsWith("local-")) await dbWrite(() => db.doc("notes/" + id).delete(), "删除");
+    else S.notes = S.notes.filter(x => x.id !== id);
+  }
+  refresh("notes");
+}
+$("#noteList").addEventListener("click", noteAction);
+$("#main").addEventListener("click", e => { if (S.view === "notebook" || S.view === "stories") noteAction(e); });
+
+/* ---------- Tabs ---------- */
+function setTab(t) {
+  S.tab = t;
+  $("#tabNotes").setAttribute("aria-selected", t === "notes"); $("#tabChat").setAttribute("aria-selected", t === "chat");
+  $("#paneNotes").hidden = t !== "notes"; $("#paneChat").hidden = t !== "chat";
+  if (t === "chat") { const l = $("#chatList"); l.scrollTop = l.scrollHeight; }
+}
+document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) setTab(b.dataset.tab); });
+function renderAsideCtx() { $("#asideCtx").textContent = S.qid ? `Q${S.qs[S.qid].n}` : ""; }
+
+/* ---------- Chat ---------- */
+let chatBusy = false, chatCtl = null;
+const USER_BG = "用户背景：在东京一家日本银行做亚洲业务，负责 PE/VC 基金的 LP 投资、跟投和战略投资；做过四大审计，有京都大学 MBA（会计与金融）。熟悉 PE、LP、GP、IRR、DD、IC 等术语，不需要解释基础概念。";
+function ctxText() {
+  const s = S.secs[S.sid]; if (!s) return "";
+  const q = S.qid ? S.qs[S.qid] : null, zb = q ? S.zh[s.id]?.questions?.[q.id] : null;
+  let t = `当前小节：${s.title}（${s.titleZh}），书中第 ${s.page} 页起。\n`;
+  if (q) {
+    t += `当前题目 Q${q.n}：${plain(q.q)}\n书中答案：\n${q.a.map(b => (b.t === "li" ? "- " : "") + plain(b.md)).join("\n").slice(0, 6000)}\n`;
+    if (zb?.keys) t += `要点：${zb.keys.join("；")}\n易错点：${zb.trap}\n`;
+  } else t += `本节导读：${s.introBlocks.map(b => plain(b.md)).join(" ").slice(0, 4000)}\n`;
+  return t;
+}
+function rules() {
+  return `你是一位投行 / PE 面试辅导老师，正在陪用户学习 BIWS《400 Questions Guide for Investment Banking Interviews: 2025 Edition》。
+${USER_BG}
+回答规则：默认用简体中文，金融术语保留英文；简洁直接，先给结论再解释；涉及报表题时按 IS → CFS → BS 推演并给出数字；书中答案有简化或与实务（尤其是 PE/LP 视角、日本或亚洲市场）不同时可以指出；用户用英文练习口述时，帮用户改成面试中自然的英文表达。
+以下是用户此刻正在看的内容：
+${ctxText()}`;
+}
+function renderChat() {
+  const list = $("#chatList"); if (!list) return;
+  const t = S.chat.turns;
+  const avail = !!sample;
+  list.innerHTML = !avail ? `<p class="hint">这里可以和 Claude 讨论当前题目。在 claude.ai 中打开本页并允许使用 Claude 后即可对话。</p>`
+    : t.length ? t.map((m, i) => `<div class="msg ${m.role}${m.err ? " err" : ""}" data-i="${i}">${m.role === "user" && m.qn ? `<div class="who">Q${m.qn}</div>` : ""}<div class="md">${m.pending ? "思考中…" : md(m.content)}</div></div>`).join("")
+    : `<p class="hint">就当前题目提问，Claude 会看到你正在读的题目和答案。聊完后点“总结到笔记”，Claude 会整理要点，你确认后存进本节笔记。</p>`;
+  list.scrollTop = list.scrollHeight;
+  $("#chatSend").disabled = !avail || chatBusy; $("#chatStop").hidden = !chatBusy;
+  $("#chatSummarize").disabled = !avail || chatBusy || !t.some(m => m.role === "assistant" && !m.err);
+  $("#chatClear").disabled = chatBusy || !t.length;
+}
+function saveChat() {
+  const turns = S.chat.turns.filter(m => !m.pending && !m.err).slice(-60).map(({ role, content, qn, ts }) => ({ role, content, qn: qn || null, ts: ts || Date.now() }));
+  const sid = S.chat.sid; if (!sid) return;
+  dbWrite(() => db.doc("chats/" + sid).set({ turns, updated: Date.now() }), "对话");
+}
+async function sendChat() {
+  const box = $("#chatInput"), text = box.value.trim(); if (!text || !sample || chatBusy) return;
+  box.value = "";
+  const qn = S.qid ? S.qs[S.qid].n : null;
+  S.chat.turns.push({ role: "user", content: text, qn, ts: Date.now() });
+  const reply = { role: "assistant", content: "", pending: true };
+  S.chat.turns.push(reply); chatBusy = true; renderChat();
+  const hist = S.chat.turns.filter(m => !m.pending && !m.err).slice(-16).map(m => ({ role: m.role, content: m.content }));
+  while (hist.length && hist[0].role !== "user") hist.shift();
+  chatCtl = new AbortController();
+  const bubble = () => $(`#chatList .msg[data-i="${S.chat.turns.indexOf(reply)}"] .md`);
+  try {
+    const { text: out, truncated } = await sample([{ role: "user", content: rules() }, ...hist], {
+      cache: false, signal: chatCtl.signal,
+      onText: ({ text: t }) => { reply.pending = false; reply.content = t; const b = bubble(); if (b) { b.innerHTML = md(t); $("#chatList").scrollTop = 1e9; } },
+    });
+    reply.pending = false; reply.content = out + (truncated ? "\n\n（回答过长被截断，可以让 Claude 继续）" : "");
+    chatBusy = false; saveChat();
+  } catch (e) {
+    chatBusy = false; reply.pending = false;
+    if (e?.text) reply.content = e.text + "\n\n（已中断）";
+    else if (e?.code === "cancelled") S.chat.turns.splice(S.chat.turns.indexOf(reply), 1);
+    else { reply.content = sampleErr(e); reply.err = true; }
+    if (e?.text) saveChat();
+  }
+  renderChat();
+}
+$("#chatSend").onclick = sendChat;
+$("#chatStop").onclick = () => chatCtl?.abort();
+$("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendChat(); } });
+let clearArmed = false;
+$("#chatClear").onclick = () => {
+  const b = $("#chatClear");
+  if (!clearArmed) { clearArmed = true; b.textContent = "确认清空？"; setTimeout(() => { clearArmed = false; b.textContent = "清空"; }, 3000); return; }
+  clearArmed = false; b.textContent = "清空"; S.chat.turns = []; renderChat(); saveChat();
+};
+$("#chatSummarize").onclick = async () => {
+  if (!sample || chatBusy) return;
+  const area = $("#summaryArea"), s = S.secs[S.sid];
+  const transcript = S.chat.turns.filter(m => !m.err && !m.pending).map(m => (m.role === "user" ? "我" + (m.qn ? `（Q${m.qn}）` : "") : "Claude") + "：" + m.content).join("\n\n").slice(-40000);
+  area.innerHTML = `<div class="summary-box"><span class="hint">Claude 正在整理要点…</span></div>`;
+  chatBusy = true; renderChat();
+  try {
+    const { text } = await sample(`下面是我在学习《400 Questions Guide for Investment Banking Interviews》“${s.title}（${s.titleZh}）”一节时与你的对话。请把它整理成一条复习笔记：
+- 简体中文，关键术语保留英文
+- 3–8 条要点，用“- ”开头；保留关键的数字推演和结论；把我原来没懂、后来弄懂的点写清楚
+- 如果对话涉及具体题号，在要点前标注（如 Q3）
+- 只输出笔记正文，不要标题和客套话
+
+对话：
+${transcript}`, { modelTier: "default", cache: false });
+    area.innerHTML = `<div class="summary-box"><span class="hint">确认或修改后保存到“${esc(s.titleZh)}”的笔记</span><textarea id="sumText">${esc(text.trim())}</textarea><div class="row" style="display:flex;gap:8px;justify-content:flex-end"><button class="ghost" id="sumCancel">放弃</button><button class="primary" id="sumSave">保存到笔记</button></div></div>`;
+    $("#sumCancel").onclick = () => { area.innerHTML = ""; };
+    $("#sumSave").onclick = async () => {
+      const v = $("#sumText").value.trim(); if (!v) return;
+      const ok = await addNote(v, "claude", { qid: null });
+      if (ok !== false) { area.innerHTML = ""; toast("对话总结已存入笔记"); setTab("notes"); }
+    };
+  } catch (e) { area.innerHTML = `<div class="summary-box"><span class="hint">${esc(sampleErr(e))}</span></div>`; }
+  chatBusy = false; renderChat();
+};
+function sampleErr(e) {
+  const c = e?.code;
+  if (c === "not_granted" || c === "sampling_disabled" || c === "not_declared") return "本页未获准使用 Claude。刷新后在弹窗中允许即可。";
+  if (c === "rate_limited") return "请求太频繁或已达到用量上限，请稍后再试。";
+  if (c === "session_expired") return "登录已过期，请重新登录 claude.ai。";
+  if (c === "prompt_too_large") return "内容太长，请清空部分对话后再试。";
+  if (c === "refused") return "Claude 没有回答这个请求，换个问法试试。";
+  if (c === "invalid_json") return "Claude 返回的格式不对，请再试一次。";
+  return "连接 Claude 失败，请稍后再试。";
+}
+
+/* ---------- Selection translate ---------- */
+let selText = "", selCtl = null;
+function hideSel() { $("#selBtn").hidden = true; }
+document.addEventListener("selectionchange", () => {
+  const sel = window.getSelection(); const t = sel?.toString().trim() || "";
+  if (!t || !sample) { hideSel(); return; }
+});
+function showSelBtn() {
+  if (!sample) return;
+  const sel = window.getSelection(); const t = sel?.toString().trim() || "";
+  if (t.length < 2 || t.length > 1200) return hideSel();
+  const node = sel.anchorNode?.parentElement; if (!node || !node.closest("#main .card, #main details.intro")) return hideSel();
+  const r = sel.getRangeAt(0).getBoundingClientRect();
+  selText = t;
+  const b = $("#selBtn"); b.hidden = false;
+  b.style.left = Math.min(window.innerWidth - 120, Math.max(12, r.left + r.width / 2 - 50)) + "px";
+  b.style.top = Math.max(8, r.top - 40) + "px";
+}
+document.addEventListener("mouseup", () => setTimeout(showSelBtn, 10));
+document.addEventListener("touchend", () => setTimeout(showSelBtn, 250));
+$("#selBtn").addEventListener("mousedown", e => e.preventDefault());
+$("#selBtn").onclick = async () => {
+  hideSel();
+  const pop = $("#pop"), b = $("#selBtn");
+  pop.style.left = Math.min(window.innerWidth - Math.min(380, window.innerWidth - 32) - 16, Math.max(16, parseFloat(b.style.left) - 140)) + "px";
+  pop.style.top = Math.min(window.innerHeight - 260, parseFloat(b.style.top) + 44) + "px";
+  const src = selText;
+  pop.innerHTML = `<div class="src">${esc(src)}</div><div class="body md">翻译中…</div><div class="row"><button class="ghost" id="popSave" disabled>存为笔记</button><button class="ghost" id="popClose">关闭</button></div>`;
+  pop.hidden = false;
+  selCtl?.abort(); selCtl = new AbortController();
+  $("#popClose").onclick = () => { selCtl?.abort(); pop.hidden = true; };
+  const q = S.qid ? S.qs[S.qid] : null;
+  let result = "";
+  try {
+    const { text } = await sample(`用户在读一本英文投行面试书，选中了下面这段文字。请：
+1) 给出准确自然的简体中文翻译（金融术语保留英文缩写）；
+2) 如果其中有术语、俚语或需要背景才能理解的点，用 1–3 条“- ”简短解释；没有就省略。
+不要重复原文，不要客套。
+${q ? `上下文（所在题目）：${plain(q.q)}\n` : ""}
+选中文字：${src}`, { modelTier: "quick", signal: selCtl.signal, onText: ({ text: t }) => { result = t; const bd = $("#pop .body"); if (bd) bd.innerHTML = md(t); } });
+    result = text; $("#pop .body").innerHTML = md(text);
+    const sv = $("#popSave"); sv.disabled = false;
+    sv.onclick = async () => { sv.disabled = true; const ok = await addNote(`> ${src}\n\n${result}`, "select"); if (ok !== false) { toast("已存为笔记"); pop.hidden = true; } };
+  } catch (e) { if (e?.code !== "cancelled") $("#pop .body").textContent = sampleErr(e); }
+};
+document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#pop").hidden = true; hideSel(); } });
+
+/* ---------- Notebook ---------- */
+function renderNotebook() {
+  const f = S.nbFilter;
+  let ns = S.notes.slice();
+  if (f.part) ns = ns.filter(n => n.pid === f.part);
+  if (f.src) ns = ns.filter(n => noteSrcKey(n) === f.src);
+  if (f.status) ns = ns.filter(n => { const r = n.qid ? S.progress[n.qid]?.rating || "new" : "new"; return r === f.status; });
+  if (f.q) { const k = f.q.toLowerCase(); ns = ns.filter(n => n.text.toLowerCase().includes(k)); }
+  const groups = new Map();
+  const secOrder = S.parts.flatMap(p => p.sections.map(s => s.id));
+  ns.sort((a, b) => (secOrder.indexOf(a.sid) - secOrder.indexOf(b.sid)) || ((S.qs[a.qid]?.n || 0) - (S.qs[b.qid]?.n || 0)) || (b.created - a.created));
+  ns.forEach(n => { const k = n.sid || "_"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(n); });
+  let h = `<div class="view-h"><h2>笔记本</h2><p>所有笔记按知识树归类。点击题号可跳回原题。</p></div>
+  <div class="filters">
+    <select id="fPart" aria-label="大部分"><option value="">全部部分</option>${S.parts.map(p => `<option value="${p.id}"${f.part === p.id ? " selected" : ""}>${esc(p.titleZh)}</option>`).join("")}</select>
+    <select id="fSrc" aria-label="来源"><option value="">全部来源</option>${Object.entries(SRC).map(([k, l]) => `<option value="${k}"${f.src === k ? " selected" : ""}>${l}</option>`).join("")}</select>
+    <select id="fStatus" aria-label="掌握度"><option value="">全部掌握度</option>${[["again", "不会"], ["hard", "模糊"], ["good", "会"], ["new", "未学 / 本节笔记"]].map(([k, l]) => `<option value="${k}"${f.status === k ? " selected" : ""}>${l}</option>`).join("")}</select>
+    <input id="fQ" type="search" placeholder="搜索笔记内容" value="${esc(f.q)}">
+    ${downloads ? `<button class="ghost" id="exportMd" ${S.notes.length ? "" : "disabled"}>导出 Markdown</button>` : ""}
+  </div>`;
+  if (!ns.length) h += `<p class="empty">${S.notes.length ? "没有符合筛选条件的笔记。" : "还没有笔记。在“学习”页右侧写下的笔记、Claude 的对话总结和划词解释都会汇总到这里。"}</p>`;
+  for (const [sid, arr] of groups) {
+    const s = S.secs[sid];
+    h += `<div class="nb-sec"><h3>${s ? esc(s.titleZh) : "其他"} <small>${s ? esc(s.title) : ""} · ${arr.length} 条</small></h3><div class="nb-grid">${arr.map(n => noteCard(n, true)).join("")}</div></div>`;
+  }
+  $("#main").innerHTML = h;
+  const bind = (id, key) => { const el = $("#" + id); el.oninput = el.onchange = () => { S.nbFilter[key] = el.value; if (id !== "fQ") renderNotebook(); else { clearTimeout(bind.t); bind.t = setTimeout(() => { renderNotebook(); const q = $("#fQ"); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } }; };
+  bind("fPart", "part"); bind("fSrc", "src"); bind("fStatus", "status"); bind("fQ", "q");
+  const ex = $("#exportMd"); if (ex) ex.onclick = exportNotes;
+}
+async function exportNotes() {
+  let out = `# IB 400 学习笔记\n\n导出时间：${new Date().toLocaleString()}\n`;
+  for (const p of S.parts) for (const s of p.sections) {
+    const arr = S.notes.filter(n => n.sid === s.id); if (!arr.length) continue;
+    out += `\n## ${s.titleZh}（${s.title}）\n`;
+    for (const n of arr) { const q = n.qid ? S.qs[n.qid] : null; out += `\n### ${q ? "Q" + q.n + " " + plain(q.q).slice(0, 80) : "本节"} · ${SRC[noteSrcKey(n)]}\n\n${n.text}\n`; }
+  }
+  const ideas = S.notes.filter(n => !n.sid); if (ideas.length) { out += `\n## Story 灵感\n`; ideas.forEach(n => { out += `\n- ${n.text.replace(/\n/g, " ")}\n`; }); }
+  try { await downloads.save({ filename: "ib400-notes.md", data: out }); } catch (e) { if (e?.code && e.code !== "cancelled" && e.code !== "declined") toast("导出未完成"); }
+}
+
+/* ---------- Story Bank ---------- */
+const SLOTS = [
+  ["resume_outline", "简历介绍 · 四段提纲", "起点（家乡 / 学校）→ 金融“Spark”（让你对金融产生兴趣的具体人或事）→ 兴趣加深（技能和经历如何积累）→ 为什么今天在这里（为什么是这家机构、这个组）。"],
+  ["resume_short", "简历介绍 · 短版", "100–150 词，对应“Walk me through your resume / Tell me about yourself”。书中认为这是最重要的一题，值得花 1–2 小时准备。"],
+  ["resume_full", "简历介绍 · 完整版", "200–300 词，按四段提纲展开，结尾落到“为什么是你们”。"],
+  ["success", "成功故事", "最好来自工作经历：你做了什么、结果如何、用了哪些与这份工作相关的能力。"],
+  ["failure", "失败故事", "真实的失败：目标是什么、为什么没达成、你学到了什么、之后怎么改的。"],
+  ["leadership", "领导力故事", "必须涉及与他人协作：协调、推动、解决冲突或突发问题。"],
+  ["strengths", "3 个优点", "可以相对通用：定量分析、客户管理、长时间工作、注重细节、会计与金融知识等，每个配一个例子。"],
+  ["weaknesses", "3 个缺点", "“真实但不致命”：不善于授权、决策偏慢、发现问题不总是说出来等。不要说“我太努力”，也不要说数学差或粗心。"],
+  ["objections", "背景短板与回应", "对照面试官心中的“理想候选人”，列出你的短板，用“改善趋势”或“可迁移能力”回应。"],
+  ["why_ib", "Why Banking / Why This Role", "书中认为唯一站得住的答案：想从头到尾完整参与交易，并积累大量交易经验。说清楚之前的经历缺了哪些环节。"],
+];
+const storyFb = {};
+function renderStories() {
+  const ideas = S.notes.filter(n => n.kind === "idea");
+  let h = `<div class="view-h"><h2>Story Bank</h2><p>按书中 Fit 部分的框架，把你自己的经历整理成可以反复使用的回答。</p></div>
+  <h3 class="section-h">灵感 <small>随手记下以后可能用得上的经历片段；在 Fit 小节的笔记里切换到“Story 灵感”也会存到这里</small></h3>
+  <div class="story" style="margin-bottom:10px"><textarea id="ideaInput" style="min-height:64px" placeholder="例如：泰国项目退出时，和日本战略买家谈判的细节…"></textarea><div class="row"><span class="hint">保存后出现在下方列表</span><button class="primary" id="ideaSave">记下灵感</button></div></div>
+  <div class="nb-grid">${ideas.map(n => noteCard(n, true)).join("") || '<p class="hint">还没有灵感。</p>'}</div>
+  <h3 class="section-h">核心回答 <small>每一栏单独保存；可以请 Claude 按书中标准点评</small></h3><div class="story-grid">`;
+  for (const [k, t, g] of SLOTS) {
+    const v = S.stories[k]?.text || "", fb = storyFb[k];
+    h += `<div class="story" data-slot="${k}"><h3>${t}</h3><p class="guide">${esc(g)}</p><textarea id="st-${k}" placeholder="在这里写你的版本（中英文都可以）">${esc(v)}</textarea>
+      <div class="row"><span class="hint">${S.stories[k]?.updated ? "上次保存 " + fmtDate(S.stories[k].updated) : "未保存"}</span>${sample ? `<button class="ghost" data-sact="fb">请 Claude 点评</button>` : ""}<button class="primary" data-sact="save">保存</button></div>
+      ${fb ? `<div class="fb md">${fb === "…" ? "Claude 正在阅读…" : md(fb)}</div>` : ""}</div>`;
+  }
+  h += `</div>`;
+  const main = $("#main");
+  const drafts = {}; SLOTS.forEach(([k]) => { const el = $("#st-" + k); if (el && el.value !== (S.stories[k]?.text || "")) drafts[k] = el.value; });
+  const ideaDraft = $("#ideaInput")?.value || "";
+  main.innerHTML = h;
+  Object.entries(drafts).forEach(([k, v]) => { const el = $("#st-" + k); if (el) el.value = v; });
+  $("#ideaInput").value = ideaDraft;
+  $("#ideaSave").onclick = async () => {
+    const t = $("#ideaInput").value.trim(); if (!t) return;
+    const now = Date.now();
+    const n = { sid: null, qid: null, pid: "fit", text: t, src: "me", kind: "idea", created: now, updated: now };
+    $("#ideaInput").value = "";
+    if (!db) { S.notes = [{ id: "local-" + now, ...n }, ...S.notes]; refresh("notes"); return; }
+    await dbWrite(() => db.collection("notes").add(n), "灵感");
+  };
+}
+$("#main").addEventListener("click", async e => {
+  const b = e.target.closest("[data-sact]"); if (!b || S.view !== "stories") return;
+  const k = b.closest("[data-slot]").dataset.slot, val = $("#st-" + k).value;
+  if (b.dataset.sact === "save") {
+    const next = { ...S.stories, [k]: { text: val, updated: Date.now() } };
+    S.stories = next;
+    const ok = await dbWrite(() => db.doc("stories/core").set(next), "Story");
+    if (ok) toast("已保存");
+    renderStories();
+  }
+  if (b.dataset.sact === "fb") {
+    if (!val.trim()) { toast("先写一点内容再请 Claude 点评"); return; }
+    const slot = SLOTS.find(x => x[0] === k);
+    storyFb[k] = "…"; renderStories();
+    try {
+      const { text } = await sample(`你是投行 / PE 面试教练。${USER_BG}
+下面是用户为“${slot[1]}”准备的回答草稿。书中的要求：${slot[2]}
+请用简体中文点评：1) 最强的一点；2) 最需要改的 2–3 点（具体到句子）；3) 如果适合，给一版改写后的英文（控制在书中建议的字数内）。简洁，不客套。
+
+草稿：
+${val}`, { modelTier: "default", cache: false });
+      storyFb[k] = text;
+    } catch (err) { storyFb[k] = sampleErr(err); }
+    renderStories();
+  }
+});
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600); }
+
+/* ---------- Boot ---------- */
+async function boot() {
+  S.lang = store.get("lang", "both");
+  S.openSecs = new Set(store.get("open", []));
+  $("#noteInput").value = store.get("draft", "");
+  try { await loadBook(); }
+  catch { $("#main").innerHTML = `<p class="empty">书本内容加载失败，请刷新页面重试。</p>`; return; }
+  const hash = (location.hash || "").slice(1);
+  const start = S.qs[hash] ? hash : S.qs[store.get("last", "")] ? store.get("last", "") : "accounting-calculations-1";
+  renderStats(); renderChat();
+  await openQuestion(start);
+
+  const C = window.claude;
+  if (!C?.use) { setBanner("本地预览：未连接 claude.ai，进度和笔记不会保存，Claude 对话不可用。"); return; }
+  C.use("sample").then(s => { sample = s; renderChat(); if (S.view === "study") renderStudy(); if (S.view === "stories") renderStories(); });
+  C.use("downloads").then(d => { downloads = d; if (S.view === "notebook") renderNotebook(); });
+  const d = await C.use("db");
+  if (!d) { setBanner("云端存储不可用，本次的进度和笔记不会保存。"); return; }
+  db = d; subscribe();
+  const sid = S.chat.sid; S.chat.sid = null; if (sid) subscribeChat(sid);
+}
+boot();
+})();
+</script>
