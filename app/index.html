@@ -375,9 +375,12 @@ const DAY = 86400000;
 const TECH_PARTS = new Set(["tech", "industry"]);
 
 /* ================= Local storage helpers ================= */
+// Offline build: the book and figures are embedded in the file and all data lives in this browser.
+const OFFLINE = !!window.IB400_OFFLINE;
+const PFX = OFFLINE ? "ib400off:" : "ib400:";
 const store = {
-  get(k, d) { try { const v = localStorage.getItem("ib400:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem("ib400:" + k, JSON.stringify(v)); return true; } catch { return false; } },
+  get(k, d) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); return true; } catch { return false; } },
 };
 
 /* ================= State ================= */
@@ -429,9 +432,8 @@ const plain = s => String(s || "").replace(/\*\*|`/g, "").replace(/(^|\W)_(.+?)_
 
 /* ================= Content ================= */
 async function loadBook() {
-  const res = await fetch("content/book.json");
-  if (!res.ok) throw new Error("book " + res.status);
-  const book = await res.json();
+  let book = window.IB400_BOOK;
+  if (!book) { const res = await fetch("content/book.json"); if (!res.ok) throw new Error("book " + res.status); book = await res.json(); }
   S.parts = book.parts;
   for (const p of S.parts) for (const s of p.sections) {
     s.pid = p.id; S.secs[s.id] = s;
@@ -473,6 +475,13 @@ function applyLocal(path, data) {
   S.col[c] = m;
 }
 function persist(path, data) {
+  if (OFFLINE) {
+    applyLocal(path, data);
+    if (!cacheLocal()) toast("浏览器存储空间不足，请先导出学习记录");
+    store.set("dirty", store.get("dirty", 0) + 1);
+    renderSync(); refresh(path.split("/")[0]);
+    return;
+  }
   outbox = outbox.filter(o => o.k !== path);
   outbox.push({ k: path, d: data, t: Date.now() });
   if (!store.set("outbox", outbox)) lastErr = "local";
@@ -505,7 +514,7 @@ async function flush() {
 window.addEventListener("online", () => flush());
 window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (S.qs[h] && h !== S.qid) openQuestion(h); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") flush(); });
-function cacheLocal() { store.set("cache", { progress: S.col.progress, notes: S.col.notes, je: S.col.je, stories: S.col.stories }); }
+function cacheLocal() { return store.set("cache", { progress: S.col.progress, notes: S.col.notes, je: S.col.je, stories: S.col.stories }); }
 function overlayOutbox(c) { for (const o of outbox) if (o.k.startsWith(c + "/")) applyLocal(o.k, o.d); }
 function subscribe() {
   for (const c of ["progress", "notes", "je", "stories"]) {
@@ -535,6 +544,13 @@ function onDbErr(e) { if (e?.code !== "revoked") setBanner("云端连接中断�
 function renderSync() {
   const el = $("#sync"), n = outbox.length;
   el.className = "sync";
+  if (OFFLINE) {
+    const dirty = store.get("dirty", 0);
+    el.classList.add(dirty ? "warn" : "ok");
+    el.querySelector("span").textContent = dirty ? `离线 · ${dirty} 处修改未导出` : "离线 · 已全部导出";
+    el.title = "离线版的数据只保存在这台电脑的浏览器里。点击导出学习记录，发给 Claude 合并到在线版。";
+    return;
+  }
   let t;
   if (!db) { t = n ? `${n} 条待上传（未连接）` : "本地模式"; if (n) el.classList.add("warn"); }
   else if (flushing) { t = "保存中…"; el.classList.add("busy"); }
@@ -544,7 +560,7 @@ function renderSync() {
   el.querySelector("span").textContent = t;
   el.title = n ? "有修改尚未上传到云端，已安全保存在本机。点击立即重试。" : lastSync ? "最近一次上传：" + new Date(lastSync).toLocaleString() : "数据同步状态";
 }
-$("#sync").onclick = () => { if (outbox.length) { flush(); toast(db ? "正在重试上传…" : "暂未连接云端，数据已保存在本机"); } else toast(connected ? "所有数据都已同步到云端" : "正在连接云端…"); };
+$("#sync").onclick = () => { if (OFFLINE) { exportJson(); return; } if (outbox.length) { flush(); toast(db ? "正在重试上传…" : "暂未连接云端，数据已保存在本机"); } else toast(connected ? "所有数据都已同步到云端" : "正在连接云端…"); };
 
 /* ================= Refresh orchestration ================= */
 function refresh(kind) {
@@ -666,7 +682,7 @@ $("#nav").addEventListener("click", e => {
 
 /* ================= Question card (study + review) ================= */
 function blockHTML(b, txt, cls) { return `<p class="blk ${b.t === "li" ? "li" + (b.lvl === 2 ? " l2" : "") : ""} ${cls}">${inl(txt)}</p>`; }
-function figHTML(f) { return `<figure class="fig"><img src="content/${esc(f.src)}" alt="${esc(plain(f.captionZh).slice(0, 120))}" loading="lazy"><figcaption><div class="fig-l">原书插图 · 中文说明</div>${md(f.captionZh)}</figcaption></figure>`; }
+function figHTML(f) { return `<figure class="fig"><img src="${esc(window.IB400_FIGS?.[f.src] || "content/" + f.src)}" alt="${esc(plain(f.captionZh).slice(0, 120))}" loading="lazy"><figcaption><div class="fig-l">原书插图 · 中文说明</div>${md(f.captionZh)}</figcaption></figure>`; }
 function blocksHTML(en, zh, figs, lang) {
   const at = {}; (figs || []).forEach(f => { (at[f.after] ||= []).push(f); });
   const figsAt = i => (at[i] || []).map(figHTML).join("");
@@ -777,7 +793,7 @@ function renderJE() {
   const j = S.col.je[S.qid];
   box.innerHTML = `<div class="je-h"><p class="h3" style="margin:0">会计分录</p><span class="grow"></span>
     ${j ? `<button class="ghost" data-act="jeNote">存入笔记</button><button class="ghost" data-act="jeRe" ${sample && !jeBusy ? "" : "disabled"}>重新生成</button>` : `<button class="ghost" data-act="je" ${sample && !jeBusy ? "" : "disabled"}>生成会计分录</button>`}</div>
-    ${jeBusy ? `<p class="hint" style="margin-top:8px">Claude 正在编写分录…</p>` : j ? `<div class="md" style="margin-top:8px">${md(j.text)}</div><p class="hint">由 Claude 于 ${fmtDate(j.ts)} 生成，已保存</p>` : `<p class="hint" style="margin-top:6px">${sample ? "点击后 Claude 会按本题情景写出借贷分录，并保存下来，下次打开直接显示。" : "在 claude.ai 中打开本页并允许使用 Claude 后可用。"}</p>`}`;
+    ${jeBusy ? `<p class="hint" style="margin-top:8px">Claude 正在编写分录…</p>` : j ? `<div class="md" style="margin-top:8px">${md(j.text)}</div><p class="hint">由 Claude 于 ${fmtDate(j.ts)} 生成，已保存</p>` : `<p class="hint" style="margin-top:6px">${sample ? "点击后 Claude 会按本题情景写出借贷分录，并保存下来，下次打开直接显示。" : OFFLINE ? "离线版不能生成分录；在线版生成过的分录，导入在线版备份后会显示在这里。" : "在 claude.ai 中打开本页并允许使用 Claude 后可用。"}</p>`}`;
 }
 async function genJE() {
   const q = S.qs[S.qid]; if (!sample || !q || jeBusy) return;
@@ -1126,16 +1142,31 @@ function renderNotebook() {
     const s = S.secs[sid];
     h += `<div class="nb-sec"><h3>${s ? esc(s.title) : "Story 灵感"} <small>${arr.length} 条</small></h3><div class="nb-grid">${arr.map(n => noteCard(n, true)).join("")}</div></div>`;
   }
-  h += `<div class="data-box"><p class="h3" style="margin:0">数据与备份</p>
-    <p class="hint" style="margin:0">学习进度、笔记、Story Bank 和对话都保存在 claude.ai 的云端数据库，登录同一账号在任何设备打开本页都会同步；每次修改也会先存在本机，确认上传后才清除。${lastSync ? "最近一次上传：" + new Date(lastSync).toLocaleString() + "。" : ""}建议定期导出一份备份。</p>
-    <div class="row">${downloads ? `<button class="ghost" data-act="exportJson">导出完整备份（JSON）</button><button class="ghost" data-act="exportMd">导出笔记（Markdown）</button>` : `<span class="hint">在 claude.ai 中打开本页后可导出备份。</span>`}<button class="ghost" data-act="import">从备份恢复</button></div><div id="importMsg"></div></div>`;
+  const canSave = downloads || OFFLINE;
+  h += `<div class="data-box"><p class="h3" style="margin:0">${OFFLINE ? "离线数据" : "数据与备份"}</p>
+    <p class="hint" style="margin:0">${OFFLINE
+      ? `离线版的进度和笔记只保存在这台电脑的浏览器里（请不要用无痕窗口，也不要清除浏览器数据）。学完一段时间后点“导出学习记录”，把文件发给 Claude，就会<strong>合并</strong>进在线版：离线新写的笔记全部新增，同一条内容以较晚修改的为准，不会删除在线版已有的任何数据。${store.get("lastExport", 0) ? "上次导出：" + new Date(store.get("lastExport", 0)).toLocaleString() + "。" : ""}`
+      : `学习进度、笔记、Story Bank 和对话都保存在 claude.ai 的云端数据库，登录同一账号在任何设备打开本页都会同步；每次修改也会先存在本机，确认上传后才清除。${lastSync ? "最近一次上传：" + new Date(lastSync).toLocaleString() + "。" : ""}建议定期导出一份备份。`}</p>
+    <div class="row">${canSave ? `<button class="${OFFLINE ? "primary" : "ghost"}" data-act="exportJson">${OFFLINE ? "导出学习记录（JSON）" : "导出完整备份（JSON）"}</button><button class="ghost" data-act="exportMd">导出笔记（Markdown）</button>` : `<span class="hint">在 claude.ai 中打开本页后可导出备份。</span>`}<button class="ghost" data-act="import">${OFFLINE ? "导入在线版备份" : "从备份导入"}</button></div><div id="importMsg"></div></div>`;
   $("#main").innerHTML = h;
   const bind = (id, key) => { const el = $("#" + id); el.oninput = el.onchange = () => { S.nbFilter[key] = el.value; if (id !== "fQ") renderNotebook(); else { clearTimeout(bind.t); bind.t = setTimeout(() => { renderNotebook(); const q = $("#fQ"); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } }; };
   bind("fPart", "part"); bind("fSrc", "src"); bind("fStatus", "status"); bind("fQ", "q");
 }
+async function saveFile(filename, data, type) {
+  if (downloads) { await downloads.save({ filename, data }); return true; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data], { type }));
+  a.download = filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return true;
+}
 async function exportJson() {
-  const data = { app: "ib400", version: 2, exported: new Date().toISOString(), progress: S.col.progress, notes: S.col.notes, stories: S.col.stories, je: S.col.je };
-  try { await downloads.save({ filename: `ib400-backup-${new Date().toISOString().slice(0, 10)}.json`, data: JSON.stringify(data, null, 1) }); } catch (e) { if (e?.code && !/cancel|declin/.test(e.code)) toast("导出未完成"); }
+  const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+  const data = { app: "ib400", version: 2, source: OFFLINE ? "offline" : "online", exported: new Date().toISOString(), progress: S.col.progress, notes: S.col.notes, stories: S.col.stories, je: S.col.je };
+  try {
+    await saveFile(`ib400-${OFFLINE ? "offline" : "backup"}-${stamp}.json`, JSON.stringify(data, null, 1), "application/json");
+    if (OFFLINE) { store.set("dirty", 0); store.set("lastExport", Date.now()); renderSync(); if (S.view === "notebook") renderNotebook(); toast("已导出。把这个文件发给 Claude 即可合并到在线版"); }
+  } catch (e) { if (e?.code && !/cancel|declin/.test(e.code)) toast("导出未完成"); }
 }
 async function exportNotes() {
   let out = `# IB 400 学习笔记\n\n导出时间：${new Date().toLocaleString()}\n`;
@@ -1146,7 +1177,7 @@ async function exportNotes() {
     for (const n of arr) { const q = n.qid ? S.qs[n.qid] : null; out += `\n### ${q ? "Q" + q.n + " " + qLabel(q).slice(0, 80) : "本节"} · ${SRC[noteSrcKey(n)]}\n\n${n.text}\n`; }
   }
   const ideas = all.filter(n => !n.sid); if (ideas.length) { out += `\n## Story 灵感\n`; ideas.forEach(n => { out += `\n- ${n.text.replace(/\n/g, " ")}\n`; }); }
-  try { await downloads.save({ filename: "ib400-notes.md", data: out }); } catch (e) { if (e?.code && !/cancel|declin/.test(e.code)) toast("导出未完成"); }
+  try { await saveFile("ib400-notes.md", out, "text/markdown"); } catch (e) { if (e?.code && !/cancel|declin/.test(e.code)) toast("导出未完成"); }
 }
 $("#importFile").addEventListener("change", async e => {
   const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
@@ -1155,14 +1186,33 @@ $("#importFile").addEventListener("change", async e => {
     const d = JSON.parse(await f.text());
     if (d.app !== "ib400") throw 0;
     const cnt = { progress: Object.keys(d.progress || {}).length, notes: Object.keys(d.notes || {}).length };
-    msg.innerHTML = `<div class="endbar" style="margin-top:8px"><span>备份含 ${cnt.progress} 条进度、${cnt.notes} 条笔记。恢复会把备份合并进来（同一条以备份为准），不会删除现有数据。</span><button class="ghost" id="impNo">取消</button><button class="primary" id="impYes">确认恢复</button></div>`;
+    msg.innerHTML = `<div class="endbar" style="margin-top:8px"><span>文件含 ${cnt.progress} 条进度、${cnt.notes} 条笔记。导入是合并：新内容全部加入，同一条内容保留较晚修改的版本，不会删除任何现有数据。</span><button class="ghost" id="impNo">取消</button><button class="primary" id="impYes">确认导入</button></div>`;
     $("#impNo").onclick = () => { msg.innerHTML = ""; };
-    $("#impYes").onclick = () => {
-      for (const c of COLS) for (const [id, v] of Object.entries(d[c] || {})) persist(c + "/" + id, v);
-      msg.innerHTML = ""; toast("备份已恢复，正在同步到云端"); refresh("notes"); refresh("progress");
-    };
+    $("#impYes").onclick = () => { const r = mergeData(d); msg.innerHTML = ""; toast(`已合并：新增 ${r.added} 条、更新 ${r.updated} 条、保留现有 ${r.kept} 条`); };
   } catch { msg.innerHTML = `<p class="hint bad">这个文件不是 IB 400 学习台的备份。</p>`; }
 });
+
+// Merge rule shared with Claude's server-side merge: never delete; per record keep the later edit.
+const stampOf = (c, v) => c === "progress" ? v?.last || 0 : c === "notes" ? v?.updated || v?.created || 0 : c === "je" ? v?.ts || 0 : 0;
+function mergeData(d) {
+  const r = { added: 0, updated: 0, kept: 0 };
+  for (const c of ["progress", "notes", "je"]) for (const [id, v] of Object.entries(d[c] || {})) {
+    const cur = S.col[c][id];
+    if (!cur) { persist(c + "/" + id, v); r.added++; }
+    else if (stampOf(c, v) > stampOf(c, cur)) { persist(c + "/" + id, v); r.updated++; }
+    else r.kept++;
+  }
+  const inc = d.stories?.core; if (inc) {
+    const cur = { ...(S.col.stories.core || {}) }; let changed = false;
+    for (const [k, v] of Object.entries(inc)) {
+      if (!cur[k]) { cur[k] = v; changed = true; r.added++; }
+      else if ((v?.updated || 0) > (cur[k].updated || 0)) { cur[k] = v; changed = true; r.updated++; }
+      else r.kept++;
+    }
+    if (changed) persist("stories/core", cur);
+  }
+  return r;
+}
 
 /* ================= Story Bank ================= */
 const SLOTS = [
@@ -1241,6 +1291,11 @@ async function boot() {
   renderStats(); renderChat();
   openQuestion(start, "study");
 
+  if (OFFLINE) {
+    $("#tabChat").hidden = true;
+    setBanner("离线版：进度和笔记保存在这台电脑的浏览器里。在“笔记本”页底部导出学习记录，发给 Claude 即可合并到在线版。问 Claude、划词解释、生成会计分录需要在线版。");
+    renderSync(); return;
+  }
   const C = window.claude;
   if (!C?.use) { setBanner("本地预览：未连接 claude.ai。修改会先保存在本机，在 claude.ai 中打开后自动上传。"); renderSync(); return; }
   C.use("sample").then(s => { sample = s; renderChat(); if (onCard()) renderJE(); if (S.view === "stories") renderStories(); });
